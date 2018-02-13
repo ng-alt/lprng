@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: permission.c,v 1.57 2003/09/05 20:07:19 papowell Exp $";
+"$Id: permission.c,v 1.1.1.1 2008/10/15 03:28:27 james26_jang Exp $";
 
 
 #include "lp.h"
@@ -19,8 +35,9 @@
 #include "permission.h"
 #include "linksupport.h"
 
-/**** ENDINCLUDE ****/
+#undef HAVE_INNETGR
 
+/**** ENDINCLUDE ****/
  struct keywords permwords[] = {
 
 {"ACCEPT", 0, P_ACCEPT,0,0,0,0},
@@ -72,6 +89,7 @@ int perm_val( char *s )
 	return(Get_keyval(s,permwords));
 }
 
+
 /***************************************************************************
  * Perms_check( struct line_list *perms, struct perm_check );
  * - run down the list of permissions
@@ -93,8 +111,10 @@ int Perms_check( struct line_list *perms, struct perm_check *check,
 	int last_default_perm;
 	char buffer[4];
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUGFC(DDB1)Dump_perm_check( "Perms_check - checking", check );
 	DEBUGFC(DDB1)Dump_line_list( "Perms_check - permissions", perms );
+#endif
 	Init_line_list(&values);
 	Init_line_list(&args);
 	last_default_perm = perm_val( Default_permission_DYN );
@@ -412,6 +432,7 @@ int Perms_check( struct line_list *perms, struct perm_check *check,
 				result, perm_str( result ) );
 	Free_line_list(&values);
 	Free_line_list(&args);
+
 	return( result );
 }
 
@@ -447,7 +468,9 @@ int match( struct line_list *list, const char *str, int invert )
 			Init_line_list(&users);
 			Get_file_image_and_split(s+1,0,0,&users,Whitespace,
 				0,0,0,0,0,0);
+#ifdef ORIGINAL_DEBUG//JY@1020
 			DEBUGFC(DDB3)Dump_line_list("match- file contents'", &users );
+#endif
 			result = match( &users,str,0);
 			Free_line_list(&users);
 		} else {
@@ -551,8 +574,10 @@ int match_char( struct line_list *list, int value, int invert )
 	int i;
 	char *s;
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUGF(DDB3)("match_char: value '0x%x' '%c'", value, value );
 	DEBUGFC(DDB3)Dump_line_list("match_char - lines", list );
+#endif
 	for( i = 0; result && i < list->count; ++i ){
 		if( !(s = list->list[i]) ) continue;
 		result = (safestrchr( s, value ) == 0) && (safestrchr(s,'*') == 0) ;
@@ -627,7 +652,9 @@ int ingroup( char *group, const char *user )
 		Init_line_list(&users);
 		Get_file_image_and_split(group+1,0,0,&users,Whitespace,
 			0,0,0,0,0,0);
+#ifdef ORIGINAL_DEBUG//JY@1020
 		DEBUGFC(DDB3)Dump_line_list("match- file contents'", &users );
+#endif
 		result = match_group( &users,user,0);
 		Free_line_list(&users);
 	} else if( (grent = getgrnam( group )) ){
@@ -665,6 +692,7 @@ int ingroup( char *group, const char *user )
 	return( result );
 }
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 /***************************************************************************
  * Dump_perm_check( char *title, struct perm_check *check )
  * Dump perm_check information
@@ -679,8 +707,10 @@ void Dump_perm_check( char *title,  struct perm_check *check )
 		LOGDEBUG(
 		"  user '%s', rmtuser '%s', printer '%s', service '%c', lpc '%s'",
 		check->user, check->remoteuser, check->printer, check->service, check->lpc );
+#ifdef ORIGINAL_DEBUG//JY@1020
 		Dump_host_information( "  host", check->host );
 		Dump_host_information( "  remotehost", check->remotehost );
+#endif
 /*
 		LOGDEBUG( "  ip '%s' port %d, unix_socket %d",
 			inet_ntop_sockaddr( &check->addr, buffer, sizeof(buffer)),
@@ -692,6 +722,7 @@ void Dump_perm_check( char *title,  struct perm_check *check )
 			check->authtype, check->authfrom, check->authuser, check->authca );
 	}
 }
+#endif
 
 /***************************************************************************
  * Perm_check_to_list( struct line_list *list, struct perm_check *check )

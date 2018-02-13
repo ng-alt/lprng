@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: sendjob.c,v 1.57 2003/09/05 20:07:20 papowell Exp $";
+"$Id: sendjob.c,v 1.1.1.1 2008/10/15 03:28:27 james26_jang Exp $";
 
 
 #include "lp.h"
@@ -135,8 +151,10 @@ int Send_job( struct job *job, struct job *logjob,
 
 	errno = 0;
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	sock = Link_open_list( RemoteHost_DYN,
 		&real_host, connect_timeout_len, 0, Unix_socket_path_DYN );
+#endif
 
 	err = errno;
 	DEBUG4("Send_job: socket %d", sock );

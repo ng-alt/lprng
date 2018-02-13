@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: child.c,v 1.57 2003/09/05 20:07:18 papowell Exp $";
+"$Id: child.c,v 1.1.1.1 2008/10/15 03:28:26 james26_jang Exp $";
 
 
 #include "lp.h"
@@ -58,6 +74,7 @@ pid_t plp_waitpid (pid_t pid, plp_status_t *statusPtr, int options)
 	return report;
 }
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 /***************************************************************************
  * Commentary:
  * When we fork a child, then we need to clean it up.
@@ -83,12 +100,15 @@ void Dump_pinfo( char *title, struct line_list *p )
 	}
 	LOGDEBUG("*** done ***");
 }
+#endif
 
 int Countpid(void)
 {
 	int i, j, pid;
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	if(DEBUGL4)Dump_pinfo("Countpid - before",&Process_list);
+#endif
 	for( i = j = 0; i < Process_list.count; ++i ){
 		pid = Cast_ptr_to_int(Process_list.list[i]);
 		if( kill(pid, 0) == 0 ){
@@ -97,7 +117,9 @@ int Countpid(void)
 		}
 	}
 	Process_list.count = j;
+#ifdef ORIGINAL_DEBUG//JY@1020
 	if(DEBUGL4)Dump_pinfo("Countpid - after", &Process_list);
+#endif
 	return( Process_list.count );
 }
 
@@ -121,7 +143,9 @@ void Killchildren( int sig )
 		}
 	}
 	Process_list.count = j;
+#ifdef ORIGINAL_DEBUG//JY@1020
 	if(DEBUGL2)Dump_pinfo("Killchildren - after",&Process_list);
+#endif
 }
 
 /*

@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: lpd_secure.c,v 1.57 2003/09/05 20:07:19 papowell Exp $";
+"$Id: lpd_secure.c,v 1.1.1.1 2008/10/15 03:28:27 james26_jang Exp $";
 
 
 #include "lp.h"
@@ -50,6 +66,7 @@
 /*************************************************************************
  * Receive_secure() - receive a secure transfer
  *************************************************************************/
+#ifdef ORIGINAL_DEBUG//JY@1020
 int Receive_secure( int *sock, char *input )
 {
 	char *printername;
@@ -252,7 +269,9 @@ int Receive_secure( int *sock, char *input )
 	cleanup(0);
 	return(0);
 }
+#endif
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 int Do_secure_work( char *jobsize, int from_server,
 	char *tempfile, struct line_list *header_info )
 {
@@ -373,7 +392,7 @@ int Do_secure_work( char *jobsize, int from_server,
 	DEBUGF(DRECV1)("Do_secure_work: returning %d", status );
 	return( status );
 }
-
+#endif
 
 /***************************************************************************
  * void Fix_auth() - get the Use_auth_DYN value for the remote printer

@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: sclient.c,v 1.57 2003/09/05 20:07:18 papowell Exp $";
+"$Id: sclient.c,v 1.1.1.1 2008/10/15 03:28:26 james26_jang Exp $";
 
 
 /*
@@ -108,6 +124,13 @@ char *argv[];
 
     /* open a TCP socket */
     sock = socket(PF_INET, SOCK_STREAM, 0);
+#ifdef WINDOW_1
+int windowsize=1024;
+setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&windowsize, sizeof(windowsize));
+aaaaaa=fopen("/tmp/qqqqq", "a");
+fprintf(aaaaaa, "sclient: main\n");
+fclose(aaaaaa);
+#endif
 	Max_open(sock);
     if( sock < 0 ){
 		perror("socket");

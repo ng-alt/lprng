@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: errormsg.c,v 1.57 2003/09/05 20:07:18 papowell Exp $";
+"$Id: errormsg.c,v 1.1.1.1 2008/10/15 03:28:26 james26_jang Exp $";
 
 
 #include "lp.h"
@@ -56,7 +72,12 @@
 #endif
 
 const char * Errormsg ( int err )
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
     const char *cp;
 
 	if( err == 0 ){
@@ -79,6 +100,7 @@ const char * Errormsg ( int err )
 	}
     return (cp);
 }
+#endif
 
  struct msgkind {
     int var;
@@ -96,7 +118,12 @@ const char * Errormsg ( int err )
 };
 
  static char * putlogmsg(int kind)
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
     int i;
     static char b[32];
 
@@ -111,10 +138,15 @@ const char * Errormsg ( int err )
     (void) SNPRINTF (b, sizeof(b)) "<BAD LOG FLAG %d>", kind);
     return (b);
 }
-
+#endif
 
  static void use_syslog(int kind, char *msg)
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
     /* testing mode indicates that this is not being used
      * in the "real world", so don't get noisy. */
 
@@ -156,10 +188,15 @@ const char * Errormsg ( int err )
 # endif							/* HAVE_OPENLOG */
 #endif                          /* HAVE_SYSLOG_H */
 }
-
+#endif
 
  static void log_backend (int kind, char *log_buf)
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
     char stamp_buf[2*SMALLBUFFER];
 	int n;
 	char *s;
@@ -224,18 +261,25 @@ const char * Errormsg ( int err )
     /* plp_unblock_all_signals ( &omask ); / **/
 	errno = err;
 }
+#endif
 
 /*****************************************************
  * Put the printer name at the start of the log buffer
  *****************************************************/
  
  static void prefix_printer( char *log_buf, int len )
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 	log_buf[0] = 0;
     if( Printer_DYN ){
 		SNPRINTF( log_buf, len-4) "%s: ", Printer_DYN );
 	}
 }
+#endif
 
 /* VARARGS2 */
 #ifdef HAVE_STDARGS
@@ -243,7 +287,12 @@ const char * Errormsg ( int err )
 #else
  void logmsg(va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     int kind;
     char *msg;
@@ -269,6 +318,7 @@ const char * Errormsg ( int err )
     VA_END;
 	errno = err;
 }
+#endif
 
 /* VARARGS2 */
 #ifdef HAVE_STDARGS
@@ -276,7 +326,12 @@ const char * Errormsg ( int err )
 #else
  void fatal (va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     int kind;
     char *msg;
@@ -302,6 +357,7 @@ const char * Errormsg ( int err )
     VA_END;
     cleanup(0);
 }
+#endif
 
 /* VARARGS2 */
 #ifdef HAVE_STDARGS
@@ -309,7 +365,12 @@ const char * Errormsg ( int err )
 #else
  void logerr (va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     int kind;
     char *msg;
@@ -337,6 +398,7 @@ const char * Errormsg ( int err )
     VA_END;
     errno = err;
 }
+#endif
 
 /* VARARGS2 */
 #ifdef HAVE_STDARGS
@@ -344,7 +406,12 @@ const char * Errormsg ( int err )
 #else
  void logerr_die (va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     int kind;
     char *msg;
@@ -373,6 +440,7 @@ const char * Errormsg ( int err )
     cleanup(0);
     VA_END;
 }
+#endif
 
 /***************************************************************************
  * Diemsg( char *m1, *m2, ...)
@@ -385,7 +453,12 @@ const char * Errormsg ( int err )
 #else
  void Diemsg (va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     char *msg;
 #endif
@@ -416,6 +489,7 @@ const char * Errormsg ( int err )
     cleanup(0);
     VA_END;
 }
+#endif
 
 /***************************************************************************
  * Warnmsg( char *m1, *m2, ...)
@@ -428,7 +502,12 @@ const char * Errormsg ( int err )
 #else
  void Warnmsg (va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     char *msg;
 #endif
@@ -456,7 +535,7 @@ const char * Errormsg ( int err )
 	errno = err;
     VA_END;
 }
-
+#endif
 
 /***************************************************************************
  * Message( char *m1, *m2, ...)
@@ -469,7 +548,12 @@ const char * Errormsg ( int err )
 #else
  void Message (va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     char *msg;
 #endif
@@ -495,6 +579,7 @@ const char * Errormsg ( int err )
 	errno = err;
     VA_END;
 }
+#endif
 
 /* VARARGS1 */
 #ifdef HAVE_STDARGS
@@ -502,7 +587,12 @@ const char * Errormsg ( int err )
 #else
  void logDebug (va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     char *msg;
 #endif
@@ -527,6 +617,7 @@ const char * Errormsg ( int err )
 	errno = err;
     VA_END;
 }
+#endif
 
 /***************************************************************************
  * char *Sigstr(n)
@@ -660,7 +751,12 @@ const char * Errormsg ( int err )
 
 
 const char *Sigstr (int n)
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
     static char buf[40];
 	const char *s = 0;
 
@@ -692,6 +788,7 @@ const char *Sigstr (int n)
 	}
     return(s);
 }
+#endif
 
 /***************************************************************************
  * Decode_status (plp_status_t *status)
@@ -699,7 +796,12 @@ const char *Sigstr (int n)
  ***************************************************************************/
 
 const char *Decode_status (plp_status_t *status)
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
     static char msg[LINEBUFFER];
 
 	int n;
@@ -722,6 +824,7 @@ const char *Decode_status (plp_status_t *status)
     }
     return (msg);
 }
+#endif
 
 /***************************************************************************
  * char *Server_status( int d )
@@ -748,7 +851,12 @@ const char *Decode_status (plp_status_t *status)
 	};
 
 char *Server_status( int d )
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 	char *s;
 	int i;
 	static char msg[LINEBUFFER];
@@ -761,6 +869,7 @@ char *Server_status( int d )
 	}
 	return(s);
 }
+#endif
 
 /*
  * Error status on STDERR
@@ -771,7 +880,12 @@ char *Server_status( int d )
 #else
  void setstatus (va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     struct job *job;
     char *fmt;
@@ -809,7 +923,7 @@ char *Server_status( int d )
 	insetstatus = 0;
 	VA_END;
 }
-
+#endif
 
 /***************************************************************************
  * void setmessage (struct job *job,char *header, char *fmt,...)
@@ -822,7 +936,12 @@ char *Server_status( int d )
 #else
  void setmessage (va_alist) va_dcl
 #endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 #ifndef HAVE_STDARGS
     struct job *job;
     char *header;
@@ -848,7 +967,7 @@ char *Server_status( int d )
 	}
 	VA_END;
 }
-
+#endif
 
 /***************************************************************************
  * send_to_logger( struct job *job, char *msg )
@@ -857,7 +976,12 @@ char *Server_status( int d )
 
  void send_to_logger( int send_to_status_fd, int send_to_mail_fd,
 	struct job *job, const char *header, char *msg_b )
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 	char *s, *t;
 	char *id, *tstr;
 	int num,pid;
@@ -912,4 +1036,4 @@ char *Server_status( int d )
 	}
 	Free_line_list(&l);
 }
-
+#endif

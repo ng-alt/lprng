@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: initialize.c,v 1.57 2003/09/05 20:07:19 papowell Exp $";
+"$Id: initialize.c,v 1.1.1.1 2008/10/15 03:28:26 james26_jang Exp $";
 
 #include "lp.h"
 #include "defs.h"
@@ -224,7 +240,9 @@ void Setup_configuration()
 	DEBUG1("Setup_configuration: Host '%s', ShortHost '%s', user '%s'",
 		FQDNHost_FQDN, ShortHost_FQDN, Logname_DYN );
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	if(DEBUGL2) Dump_parms( "Setup_configuration - final values", Pc_var_list );
+#endif
 
 	if( Is_server ){
 		DEBUG2("Setup_configuration: Printcap_path '%s'", Printcap_path_DYN );
@@ -282,6 +300,7 @@ void Setup_configuration()
 		}
 		Free_line_list( &order );
 	}
+#ifdef ORIGINAL_DEBUG//JY@1020
 	if(DEBUGL3){
 		Dump_line_list("Setup_configuration: PC names", &PC_names_line_list );
 		Dump_line_list("Setup_configuration: PC order", &PC_order_line_list );
@@ -294,6 +313,7 @@ void Setup_configuration()
 		Dump_line_list("Setup_configuration: Raw Perms", &RawPerm_line_list );
 		Dump_line_list("Setup_configuration: Perms", &Perm_line_list );
 	}
+#endif
 }
 
 /*

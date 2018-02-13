@@ -1,6 +1,6 @@
 #!/usr/bin/perl -- # -*- Perl -*-
 #
-# $Id: collateindex.pl,v 1.5 2001/04/20 20:23:42 adicarlo Exp $
+# $Id: collateindex.pl,v 1.1.1.1 2008/10/15 03:28:19 james26_jang Exp $
 
 =head1 NAME
 
@@ -24,7 +24,7 @@ use Getopt::Std;
 $usage = "usage: $0 [options] file
 Do 'perldoc $0' for documentation.\n";
 
-( $version = '$Revision: 1.5 $' ) =~ s/^\$[R]evision:\s*([^ ]*)\s*\$$/$1/;
+( $version = '$Revision: 1.1.1.1 $' ) =~ s/^\$[R]evision:\s*([^ ]*)\s*\$$/$1/;
 
 =head1 OPTIONS
 

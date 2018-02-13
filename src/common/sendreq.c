@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: sendreq.c,v 1.57 2003/09/05 20:07:20 papowell Exp $";
+"$Id: sendreq.c,v 1.1.1.1 2008/10/15 03:28:27 james26_jang Exp $";
 
 
 #include "lp.h"
@@ -88,7 +104,9 @@ int Send_request(
 	DEBUG1("Send_request: connnect_timeout %d, transfer_timeout %d",
 			connnect_timeout, transfer_timeout );
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	security = Fix_send_auth(0,&info, 0, errormsg, sizeof(errormsg) );
+#endif
 
 	DEBUG1("Send_request: security %s", security?security->name:0 );
 	if( security ){
@@ -132,8 +150,10 @@ int Send_request(
 	cmd = safeextend2(cmd,"\n", __FILE__,__LINE__ );
 	errno = 0;
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	sock = Link_open_list( RemoteHost_DYN,
 		&real_host, connnect_timeout, 0, Unix_socket_path_DYN );
+#endif
 	err = errno;
 	if( sock < 0 ){
 		char *msg = "";
@@ -169,8 +189,10 @@ int Send_request(
 	}
 	/* now send the command line */
 	if( security && security->client_send ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 		status = Send_auth_transfer( &sock, transfer_timeout, 0, 0,
 			errormsg, sizeof(errormsg), cmd, security, &info );
+#endif
 	} else {
 		status = Link_send( RemoteHost_DYN, &sock, transfer_timeout,
 			cmd, safestrlen(cmd), 0 );

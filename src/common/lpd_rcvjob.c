@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: lpd_rcvjob.c,v 1.57 2003/09/05 20:07:19 papowell Exp $";
+"$Id: lpd_rcvjob.c,v 1.1.1.1 2008/10/15 03:28:27 james26_jang Exp $";
 
 
 #include "lp.h"
@@ -27,6 +43,9 @@
 #include "lpd_remove.h"
 #include "lpd_rcvjob.h"
 #include "lpd_jobs.h"
+#ifdef JYDEBUG//JYWeng
+FILE *aaaaaa;
+#endif
 /**** ENDINCLUDE ****/
 
 /***************************************************************************
@@ -120,6 +139,18 @@ int Receive_job( int *sock, char *input )
 	struct job job;
 	struct stat statb;
 
+#ifdef REMOVE
+#ifdef WINDOW_1//JYWeng
+//aaaaaa=fopen("/tmp/pp", "a");
+//fprintf(aaaaaa, "lpd_rcvjobs.c\n");
+//fclose(aaaaaa);
+#endif
+#ifdef JYDEBUG//JYWeng
+aaaaaa=fopen("/tmp/qqqqq", "a");
+fprintf(aaaaaa, "Receive_job: check point 1\n");
+fclose(aaaaaa);
+#endif
+#endif
 	Init_line_list(&l);
 	Init_line_list(&files);
 	Init_line_list(&info);
@@ -131,7 +162,20 @@ int Receive_job( int *sock, char *input )
 	Clean_meta(input);
 	Split(&info,input,Whitespace,0,0,0,0,0,0);
 
+//printf("Receive_job!\n");//JY1107
+/*JY1113: test QueueName*/
+	if(get_queue_name(input))
+	{
+		//printf("QueueName is not LPRServer\n");
+		send_ack_packet(sock, ACK_FAIL);//JY1120
+		return(0);
+	}
+	//else printf("QueueName is LPRServer\n");
+/**/
+
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUGFC(DRECV1)Dump_line_list("Receive_job: input", &info );
+#endif
 	if( info.count != 1 ){
 		SNPRINTF( error, errlen) _("bad command line") );
 		goto error;
@@ -141,8 +185,14 @@ int Receive_job( int *sock, char *input )
 		goto error;
 	}
 
+#ifdef REMOVE
 	setproctitle( "lpd RECV '%s'", info.list[0] );
 
+#ifdef JYDEBUG//JYWeng
+aaaaaa=fopen("/tmp/qqqqq", "a");
+fprintf(aaaaaa, "Receive_job: check point 2\n");
+fclose(aaaaaa);
+#endif
 	if( Setup_printer( info.list[0], error, errlen, 0 ) ){
 		if( error[0] == 0 ){
 			SNPRINTF( error, errlen) _("%s: cannot set up print queue"), Printer_DYN );
@@ -177,6 +227,11 @@ int Receive_job( int *sock, char *input )
 		DbgFlag = j;
 	}
 
+#ifdef JYDEBUG//JYWeng
+aaaaaa=fopen("/tmp/qqqqq", "a");
+fprintf(aaaaaa, "Receive_job: check point 3\n");
+fclose(aaaaaa);
+#endif
 	DEBUGF(DRECV1)("Receive_job: spooling_disabled %d",
 		Sp_disabled(&Spool_control) );
 	if( Sp_disabled(&Spool_control) ){
@@ -185,17 +240,28 @@ int Receive_job( int *sock, char *input )
 		ack = ACK_RETRY;	/* retry */
 		goto error;
 	}
+#endif
 
 	/* send an ACK */
 	DEBUGF(DRECV1)("Receive_job: sending 0 ACK for job transfer request" );
+	printf("Send ACK\n");
 
+#ifdef JYDEBUG//JYWeng
+aaaaaa=fopen("/tmp/qqqqq", "a");
+fprintf(aaaaaa, "Receive_job: check point 4\n");
+fclose(aaaaaa);
+#endif
 	status = Link_send( ShortRemote_FQDN, sock, Send_job_rw_timeout_DYN, "", 1, 0 );
-	if( status ){
+
+	if( status )
+	{
+		
 		SNPRINTF( error, errlen)
 			_("%s: Receive_job: sending ACK 0 failed"), Printer_DYN );
 		goto error;
 	}
 
+#ifdef REMOVE
 	/* fifo order enforcement */
 	if( Fifo_DYN ){
 		char * path = Make_pathname( Spool_dir_DYN, Fifo_lock_file_DYN );
@@ -215,11 +281,23 @@ int Receive_job( int *sock, char *input )
 		if(path) free(path); path = 0;
 	}
 
+#ifdef JYDEBUG//JYWeng
+aaaaaa=fopen("/tmp/qqqqq", "a");
+fprintf(aaaaaa, "Receive_job: check point 5\n");
+fclose(aaaaaa);
+#endif
+#endif
+
 	while( status == 0 ){
 		DEBUGF(DRECV1)("Receive_job: from %s- getting file transfer line", FQDNRemote_FQDN );
 		rlen = sizeof(line)-1;
 		line[0] = 0;
 		status = Link_line_read( ShortRemote_FQDN, sock, Send_job_rw_timeout_DYN, line, &rlen );
+#ifdef JYDEBUG//JYWeng
+aaaaaa=fopen("/tmp/pp", "a");
+fprintf(aaaaaa, "Receive_job: line=%0x\n", &line[0]);
+fclose(aaaaaa);
+#endif
 
 		DEBUGF(DRECV1)( "Receive_job: read from %s- status %d read %d bytes '%s'",
 				FQDNRemote_FQDN, status, rlen, line );
@@ -236,6 +314,7 @@ int Receive_job( int *sock, char *input )
 			status = 0;
 			break;
 		}
+
 		filetype = line[0];
 		Clean_meta(line+1);
 
@@ -246,6 +325,7 @@ int Receive_job( int *sock, char *input )
 			break;
 		}
 		/* make sure we have length and filename */
+
 		filename = 0;
 		file_len = strtod(line+1,&filename);
 		if ((line+1) == filename){
@@ -256,6 +336,7 @@ int Receive_job( int *sock, char *input )
 			LOGERR(LOG_ERR)"Recovering from incorrect job submission");
 			continue;
 		}
+
 		if( filename ){
 			while( isspace(cval(filename)) ) ++filename;
 			Clean_meta(filename);
@@ -272,6 +353,7 @@ int Receive_job( int *sock, char *input )
 			goto error;
 		}
 
+
 		/************************************************
 		 * check for job size and available space
 		 * This is done here so that we can neatly clean up
@@ -279,6 +361,7 @@ int Receive_job( int *sock, char *input )
 		 ************************************************/
 		jobsize += file_len;
 		read_len = file_len;
+
 
 		if( read_len == 0 ) read_len = Max_job_size_DYN*1024;
 		if( Max_job_size_DYN > 0 && (jobsize/1024) > (0.0+Max_job_size_DYN) ){
@@ -294,6 +377,7 @@ int Receive_job( int *sock, char *input )
 			goto error;
 		}
 
+
 		/*
 		 * we are ready to read the file; send 0 ack saying so
 		 */
@@ -307,6 +391,7 @@ int Receive_job( int *sock, char *input )
 			goto error;
 		}
 
+
 		temp_fd = Make_temp_fd(&tempfile);
 
 		/*
@@ -316,8 +401,24 @@ int Receive_job( int *sock, char *input )
 
 		DEBUGF(DRECV4)("Receive_job: receiving '%s' %d bytes ", filename, read_len );
 		len = read_len;
+#if TEST_WRITE//JYWeng
+	if(filetype != DATA_FILE){
+#if 1//JY1110
 		status = Link_file_read( ShortRemote_FQDN, sock,
 			Send_job_rw_timeout_DYN, 0, temp_fd, &read_len, &ack );
+#else
+		status = Link_file_read_test( ShortRemote_FQDN, sock,
+			Send_job_rw_timeout_DYN, 0, temp_fd, &read_len, &ack );
+#endif
+		}
+	else	{
+		status = Link_file_read_test( ShortRemote_FQDN, sock,
+			Send_job_rw_timeout_DYN, 0, temp_fd, &read_len, &ack );
+		}
+#else
+		status = Link_file_read( ShortRemote_FQDN, sock,
+			Send_job_rw_timeout_DYN, 0, temp_fd, &read_len, &ack );
+#endif
 
 		DEBUGF(DRECV4)("Receive_job: status %d, read_len %0.0f, file_len %0.0f",
 			status, read_len, file_len );
@@ -328,7 +429,9 @@ int Receive_job( int *sock, char *input )
 
 		if( status 
 			|| (file_len == 0 && read_len == 0)
-			|| (file_len != 0 && file_len != read_len) ){
+			|| (file_len != 0 && file_len != read_len) )
+		{
+			printf("Why error %lf %lf %d\n", file_len, read_len, status);
 			SNPRINTF( error, errlen)
 				_("%s: transfer of '%s' from '%s' failed"), Printer_DYN,
 				filename, ShortRemote_FQDN );
@@ -339,7 +442,9 @@ int Receive_job( int *sock, char *input )
 		/*
 		 * we process the control file and make sure we can print it
 		 */
+		printf(" Control file\n");
 
+#if defined(JYWENG20031104CONTROL)
 		if( filetype == CONTROL_FILE ){
 			DEBUGF(DRECV2)("Receive_job: receiving new control file, old job.info.count %d, old files.count %d",
 				job.info.count, files.count );
@@ -371,12 +476,15 @@ int Receive_job( int *sock, char *input )
 		} else {
 			Set_casekey_str_value(&files,filename,tempfile);
 		}
+#endif
 		DEBUGF(DRECV2)("Receive_job: sending 0 ACK transfer done" );
 		status = Link_send( ShortRemote_FQDN, sock, Send_job_rw_timeout_DYN, "",1, 0 );
 	}
 
 	DEBUGF(DRECV2)("Receive_job: eof on transfer, job.info.count %d, files.count %d",
 		job.info.count, files.count );
+
+#if defined(JYWENG20031104Check_for_missing_files)
 	if( job.info.count ){
 		/* we receive another control file */
 		if( Check_for_missing_files(&job, &files, error, errlen, 0, &hold_fd) ){
@@ -387,9 +495,14 @@ int Receive_job( int *sock, char *input )
 		jobsize = 0;
 		Free_job(&job);
 	}
+#endif
+
+/*JY1110*/
+
 
  error:
 
+#if 0//JY1111
 	if( temp_fd > 0 ) close(temp_fd); temp_fd = -1;
 	if( fifo_fd > 0 ){
 		Do_unlock( fifo_fd );
@@ -398,8 +511,10 @@ int Receive_job( int *sock, char *input )
 
 	Remove_tempfiles();
 	if( error[0] ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 		DEBUGF(DRECV1)("Receive_job: error, removing job" );
 		DEBUGFC(DRECV4)Dump_job("Receive_job - error", &job );
+#endif
 		s = Find_str_value(&job.info,HF_NAME,Value_sep);
 		if( !ISNULL(s) ) unlink(s);
 		if( ack == 0 ) ack = ACK_FAIL;
@@ -444,9 +559,14 @@ int Receive_job( int *sock, char *input )
 	Free_line_list(&l);
 
 	cleanup( 0 );
+#endif//JY1111
+
+/*JY1111*/
+	check_prn_status(ONLINE, "");
 	return(0);
 }
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 /***************************************************************************
  * Block Job Transfer
  * \RCV_BLOCKprinter size
@@ -485,7 +605,9 @@ int Receive_block_job( int *sock, char *input )
 	if( *input ) ++input;
 	Clean_meta(input);
 	Split(&l,input,Whitespace,0,0,0,0,0,0);
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUGFC(DRECV1)Dump_line_list("Receive_block_job: input", &l );
+#endif
 
 	if( l.count != 2 ){
 		SNPRINTF( error, errlen-4) _("bad command line") );
@@ -587,8 +709,10 @@ int Receive_block_job( int *sock, char *input )
 	/* extract jobs */
 
 	if( lseek( temp_fd, 0, SEEK_SET ) == -1 ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 		SNPRINTF( error, errlen-4)	
 			_("Receive_block_job: lseek failed '%s'"), Errormsg(errno) );
+#endif
 		ack = ACK_FAIL;
 		goto error;
 	}
@@ -641,8 +765,10 @@ int Receive_block_job( int *sock, char *input )
 	}
 	return( error[0] != 0 );
 }
+#endif
 
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 /***************************************************************************
  * Scan_block_file( int fd, struct control_file *cfp )
  *  we scan the block file, getting the various portions
@@ -696,8 +822,10 @@ int Scan_block_file( int fd, char *error, int errlen, struct line_list *header_i
 		Free_line_list(&info);
 		startpos = lseek( fd, 0, SEEK_CUR );
 		if( startpos == -1 ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 			SNPRINTF( error, errlen)	
 				_("Scan_block_file: lseek failed '%s'"), Errormsg(errno) );
+#endif
 			status = 1;
 			goto error;
 		}
@@ -716,7 +844,9 @@ int Scan_block_file( int fd, char *error, int errlen, struct line_list *header_i
 			status = 1;
 			goto error;
 		}
+#ifdef ORIGINAL_DEBUG//JY@1020
 		DEBUGFC(DRECV2)Dump_line_list("Scan_block_file- input", &info );
+#endif
 		read_len = atoi( info.list[0] );
 		filename = info.list[1];
 		tempfd = Make_temp_fd( &tempfile );
@@ -728,8 +858,10 @@ int Scan_block_file( int fd, char *error, int errlen, struct line_list *header_i
 			DEBUGF(DRECV2)("Scan_block_file: len %d, reading %d, got count %d",
 				len, n, count );
 			if( count < 0 ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 				SNPRINTF( error, errlen)	
 					_("Scan_block_file: read failed '%s'"), Errormsg(errno) );
+#endif
 				status = 1;
 				goto error;
 			} else if( count == 0 ){
@@ -740,8 +872,10 @@ int Scan_block_file( int fd, char *error, int errlen, struct line_list *header_i
 			}
 			n = write(tempfd,buffer,count);
 			if( n != count ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 				SNPRINTF( error, errlen)	
 					_("Scan_block_file: lseek failed '%s'"), Errormsg(errno) );
+#endif
 				status = 1;
 				goto error;
 			}
@@ -753,6 +887,8 @@ int Scan_block_file( int fd, char *error, int errlen, struct line_list *header_i
 			DEBUGF(DRECV2)("Scan_block_file: control file '%s'", filename );
 			DEBUGF(DRECV2)("Scan_block_file: received control file, job.info.count %d, files.count %d",
 				job.info.count, files.count );
+
+#if defined(JYWENG20031104Config_value_conversion)
 			if( job.info.count ){
 				if( Check_for_missing_files(&job, &files, error, errlen, 0, &hold_fd) ){
 					goto error;
@@ -761,10 +897,12 @@ int Scan_block_file( int fd, char *error, int errlen, struct line_list *header_i
 				Free_line_list(&files);
 				Free_job(&job);
 			}
+#endif
 			Set_str_value(&job.info,OPENNAME,tempfile);
 			Set_str_value(&job.info,TRANSFERNAME,filename);
 			hold_fd = Set_up_temporary_hold_file( &job, error, errlen );
 			if( hold_fd < 0 ) goto error;
+#if defined(JYWENG20031104Config_value_conversion)
 			if( files.count ){
 				/* we have datafiles, FOLLOWED by a control file,
 					followed (possibly) by another control file */
@@ -776,11 +914,13 @@ int Scan_block_file( int fd, char *error, int errlen, struct line_list *header_i
 				Free_line_list(&files);
 				Free_job(&job);
 			}
+#endif
 		} else {
 			Set_str_value(&files,filename,tempfile);
 		}
 	}
 
+#if defined(JYWENG20031104Config_value_conversion)
 	if( files.count ){
 		/* we receive another control file */
 		if( Check_for_missing_files(&job, &files, error, errlen, header_info, &hold_fd) ){
@@ -790,6 +930,7 @@ int Scan_block_file( int fd, char *error, int errlen, struct line_list *header_i
 		Free_line_list(&files);
 		Free_job(&job);
 	}
+#endif
 
  error:
 	if( hold_fd >= 0 ){
@@ -803,6 +944,7 @@ int Scan_block_file( int fd, char *error, int errlen, struct line_list *header_i
 	Free_job(&job);
 	return( status );
 }
+#endif
 
 /***************************************************************************
  * static int read_one_line(int fd, char *buffer, int maxlen );
@@ -832,20 +974,39 @@ int Check_space( double jobsize, int min_space, char *pathname )
 	int ok;
 
 	jobsize = ((jobsize+1023)/1024);
+
 	ok = ((jobsize + min_space) < space);
+#ifdef RETURNOK 
+aaaaaa=fopen("/tmp/qqqqq", "a");
+fprintf(aaaaaa, "PATH=%s\n", pathname);
+fprintf(aaaaaa, "*********************************************************\n");
+fprintf(aaaaaa, "min_space=%d\n", min_space);
+fprintf(aaaaaa, "jobsize=%f\n", jobsize);
+fprintf(aaaaaa, "availspace=%f\n", space);
+fprintf(aaaaaa, "ok=%d\n", ok);
+fprintf(aaaaaa, "*********************************************************\n");
+fclose(aaaaaa);
+#endif
 
 	DEBUGF(DRECV1)("Check_space: path '%s', space %0.0f, jobsize %0.0fK, ok %d",
 		pathname, space, jobsize, ok );
 
-	return( ok );
+#ifdef RETURNOK 
+	return( ok );//JYWeng
+#else
+	return( 1 );
+#endif
 }
 
+#if defined(JYWENG20031104Do_perm_check)
 int Do_perm_check( struct job *job, char *error, int errlen )
 {
 	int permission = 0;			/* permission */
 	char *s;
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUGFC(DRECV1)Dump_job("Do_perm_check", job );
+#endif
 	Perm_check.service = 'R';
 	Perm_check.printer = Printer_DYN;
 	s = Find_str_value(&job->info,LOGNAME,Value_sep);
@@ -876,6 +1037,7 @@ int Do_perm_check( struct job *job, char *error, int errlen )
 	DEBUGF(DRECV1)("Do_perm_check: permission '%s'", perm_str(permission) );
 	return( permission );
 }
+#endif
 
 /*
  * Process the list of control and data files, and make a job from them
@@ -892,6 +1054,7 @@ int Do_perm_check( struct job *job, char *error, int errlen )
  *          != 0 - error
  */
 
+#if defined(JYWENG20031104Check_for_missing_files)
 int Check_for_missing_files( struct job *job, struct line_list *files,
 	char *error, int errlen, struct line_list *header_info, int *holdfile_fd )
 {
@@ -908,13 +1071,14 @@ int Check_for_missing_files( struct job *job, struct line_list *files,
 		Errorcode = JABORT;
 		LOGERR_DIE(LOG_INFO) "Check_for_missing_files: gettimeofday failed");
 	}
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUG1("Check_for_missing_files: holdfile_fd %d, start time 0x%x usec 0x%x",
 		*holdfile_fd,
 		(int)start_time.tv_sec, (int)start_time.tv_usec );
 	if(DEBUGL1)Dump_job("Check_for_missing_files - start", job );
 	if(DEBUGL1)Dump_line_list("Check_for_missing_files- files", files );
 	if(DEBUGL1)Dump_line_list("Check_for_missing_files- header_info", header_info );
-
+#endif
 
 	Set_flag_value(&job->info,JOB_TIME,(int)start_time.tv_sec);
 	Set_flag_value(&job->info,JOB_TIME_USEC,(int)start_time.tv_usec);
@@ -955,7 +1119,9 @@ int Check_for_missing_files( struct job *job, struct line_list *files,
 				Set_flag_value(lp,COPIES,1);
 				if( openname ) openname[-1] = '=';
 			}
+#ifdef ORIGINAL_DEBUG//JY@1020
 			if(DEBUGL1)Dump_job("RedHat Linux fix", job );
+#endif
 		}
 		for( count = 0; count < job->datafiles.count; ++count ){
 			lp = (void *)job->datafiles.list[count];
@@ -971,8 +1137,10 @@ int Check_for_missing_files( struct job *job, struct line_list *files,
 				goto error;
 			}
 			if( (status = stat( openname, &statb )) ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 					SNPRINTF( error, errlen) "stat() '%s' error - %s",
 					openname, Errormsg(errno) );
+#endif
 				goto error;
 			}
 			copies = Find_flag_value(lp,COPIES,Value_sep);
@@ -981,7 +1149,9 @@ int Check_for_missing_files( struct job *job, struct line_list *files,
 		}
 		Set_double_value(&job->info,SIZE,jobsize);
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 		if(DEBUGL1)Dump_line_list("Check_for_missing_files- found", &datafiles );
+#endif
 		if( files->count != datafiles.count ){
 			SNPRINTF(error,errlen)"too many data files");
 			status = 1;
@@ -1006,12 +1176,13 @@ int Check_for_missing_files( struct job *job, struct line_list *files,
 			DEBUG1("Check_for_missing_files: setting user to authuser '%s'", s );
 		}
 	}
-
+#if defined(JYWENG20031104Create_control)
 	if( Create_control( job, error, errlen, Xlate_incoming_format_DYN ) ){
 		DEBUG1("Check_for_missing_files: Create_control error '%s'", error );
 		status = 1;
 		goto error;
 	}
+#endif
 	Set_str_value(&job->info,HPFORMAT,0);
 	Set_str_value(&job->info,INCOMING_TIME,0);
 
@@ -1037,9 +1208,11 @@ int Check_for_missing_files( struct job *job, struct line_list *files,
 		DEBUG1("Check_for_missing_files: renaming '%s' to '%s'",
 			openname, transfername );
 		if( (status = rename(openname,transfername)) ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 			SNPRINTF( error,errlen)
 				"error renaming '%s' to '%s' - %s",
 				openname, transfername, Errormsg( errno ) );
+#endif
 		}
 	}
 	if( status ) goto error;
@@ -1052,18 +1225,24 @@ int Check_for_missing_files( struct job *job, struct line_list *files,
 	DEBUG1("Check_for_missing_files: renaming '%s' to '%s'",
 		openname, transfername );
 	if( (status = rename(openname,transfername)) ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 		SNPRINTF( error,errlen)
 			"error renaming '%s' to '%s' - %s",
 			openname, transfername, Errormsg( errno ) );
+#endif
 		goto error;
 	}
 	if( (status = Set_hold_file( job, 0, *holdfile_fd )) ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 		SNPRINTF( error,errlen)
 			"error setting up hold file - %s",
 			Errormsg( errno ) );
+#endif
 		goto error;
 	}
+#ifdef ORIGINAL_DEBUG//JY@1020
 	if(DEBUGL1)Dump_job("Check_for_missing_files - ending", job );
+#endif
 
  error:
 	transfername = Find_str_value(&job->info,TRANSFERNAME,Value_sep);
@@ -1087,14 +1266,18 @@ int Check_for_missing_files( struct job *job, struct line_list *files,
 		/*
 		LOGMSG(LOG_INFO) "Check_for_missing_files: SUCCESS '%s'", transfername);
 		*/
+#ifdef ORIGINAL_DEBUG//JY@1020
 		setmessage( job, "STATE", "CREATE" );
+#endif
 	}
 
 	if( *holdfile_fd >= 0 ) close(*holdfile_fd); *holdfile_fd = -1;
 	Free_line_list(&datafiles);
 	return( status );
 }
+#endif
 
+#if defined(JYWENG200301104Set_up_temporary_hold_file)
 /***************************************************************************
  * int Set_up_temporary_hold_file( struct job *job,
  *	char *error, int errlen )
@@ -1122,15 +1305,18 @@ int Set_up_temporary_hold_file( struct job *job,
 	Set_flag_value(&job->info,INCOMING_TIME,time((void *)0) );
 	/* write status */
 	if( Set_hold_file( job, 0, fd ) ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 		SNPRINTF( error,errlen)
 			"error setting up hold file - %s",
 			Errormsg( errno ) );
+#endif
 		close(fd); fd = -1;
 		goto error;
 	}
  error:
 	return( fd );
 }
+#endif
 
 /***************************************************************************
  * int Find_non_colliding_job_number( struct job *job )
@@ -1178,7 +1364,12 @@ int Find_non_colliding_job_number( struct job *job )
 }
 
 int Get_route( struct job *job, char *error, int errlen )
+#ifdef ORIGINAL_DEBUG//JY@1020
 {
+#else
+{}
+#endif
+#ifdef ORIGINAL_DEBUG//JY@1020
 	int i, fd, tempfd, count, c;
 	char *tempfile, *openname, *s, *t, *id;
 	char buffer[SMALLBUFFER];
@@ -1212,8 +1403,10 @@ int Get_route( struct job *job, char *error, int errlen )
 
 	openname = Find_str_value(&job->info,OPENNAME,Value_sep);
 	if( (fd = open(openname,O_RDONLY,0)) < 0 ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 		SNPRINTF(error,errlen)"Get_route: open '%s' failed '%s'",
 			openname, Errormsg(errno) );
+#endif
 		errorcode = 1;
 		goto error;
 	}
@@ -1241,21 +1434,27 @@ int Get_route( struct job *job, char *error, int errlen )
 		}
 		close(fd); close(tempfd); fd = -1; tempfd = -1;
 		if( rename( tempfile, openname ) == -1 ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 			SNPRINTF(error,errlen)"Get_route: rename '%s' to '%s' failed - %s",
 				tempfile, openname, Errormsg(errno) );
+#endif
 			errorcode = 1;
 			goto error;
 		}
 		if( (fd = open(openname,O_RDONLY,0)) < 0 ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 			SNPRINTF(error,errlen)"Get_route: open '%s' failed '%s'",
 				openname, Errormsg(errno) );
+#endif
 			errorcode = 1;
 			goto error;
 		}
 		Max_open(fd);
 		if( Get_file_image_and_split(openname,0,0, &cf_line_list, Line_ends,0,0,0,0,0,0) ){
+#ifdef ORIGINAL_DEBUG//JY@1020
             SNPRINTF(error,errlen)
                 "Get_route: open failed - modified control file  %s - %s", openname, Errormsg(errno) );
+#endif
 			goto error;
 		}
 		for( i = 'A'; i <= 'Z'; ++i ){
@@ -1351,7 +1550,9 @@ int Get_route( struct job *job, char *error, int errlen )
 	}
 	Free_line_list(&job->destination);
 	Set_flag_value(&job->info,DESTINATIONS,count);
+#ifdef ORIGINAL_DEBUG//JY@1020
 	if(DEBUGL1)Dump_job("Get_route: final", job );
+#endif
 
  error:
 	Free_line_list(&info);
@@ -1360,3 +1561,4 @@ int Get_route( struct job *job, char *error, int errlen )
 	Free_line_list(&cf_line_list);
 	return( errorcode );
 }
+#endif

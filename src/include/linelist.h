@@ -1,10 +1,26 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
  * Copyright 1988-2003, Patrick Powell, San Diego, CA
  *     papowell@lprng.com
  * See LICENSE for conditions of use.
- * $Id: linelist.h,v 1.57 2003/09/05 20:07:21 papowell Exp $
+ * $Id: linelist.h,v 1.1.1.1 2008/10/15 03:28:27 james26_jang Exp $
  ***************************************************************************/
 
 
@@ -180,6 +196,7 @@ void Split( struct line_list *l, char *str, const char *sep,
 char *Join_line_list( struct line_list *l, char *sep );
 char *Join_line_list_with_sep( struct line_list *l, char *sep );
 char *Join_line_list_with_quotes( struct line_list *l, char *sep );
+
 void Dump_line_list( const char *title, struct line_list *l );
 void Dump_line_list_sub( const char *title, struct line_list *l );
 char *Find_str_in_flat( char *str, const char *key, const char *sep );
@@ -240,7 +257,11 @@ void Find_pc_info( char *name,
 void Clear_var_list( struct keywords *v, int setv );
 void Set_var_list( struct keywords *keys, struct line_list *values );
 int Check_str_keyword( const char *name, int *value );
+#if defined(JYWENG20031104Config_value_conversion)
 void Config_value_conversion( struct keywords *key, const char *s );
+#else
+#define Config_value_conversion(...) NULL
+#endif
 void Expand_percent( char **var );
 void Expand_vars( void );
 void Expand_hash_values( struct line_list *hash );

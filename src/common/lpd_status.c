@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
 /***************************************************************************
  * LPRng - An Extended Print Spooler System
  *
@@ -8,7 +24,7 @@
  ***************************************************************************/
 
  static char *const _id =
-"$Id: lpd_status.c,v 1.57 2003/09/05 20:07:19 papowell Exp $";
+"$Id: lpd_status.c,v 1.1.1.1 2008/10/15 03:28:27 james26_jang Exp $";
 
 
 #include "lp.h"
@@ -27,6 +43,8 @@
 
 #include "lpd_jobs.h"
 #include "lpd_status.h"
+
+//extern char printerstatus[32];//JY1106
 
 /**** ENDINCLUDE ****/
 
@@ -85,7 +103,66 @@ int Job_status( int *sock, char *input )
 	struct line_list done_list;
 	char error[SMALLBUFFER], buffer[16];
 	int db, dbflag;
+	
+	FILE *READSTATUSFILE;//JY1120
+	char readbuffer[SMALLBUFFER];//JY1120
+	char *str_index;//JY1120
 
+#if !defined(JYWENG20031104status)
+	if( input && *input ) ++input;//JY1114
+	if(get_queue_name(input))
+	{
+		printf("QueueName is not LPRServer\n");
+		send_ack_packet(sock, ACK_FAIL);//JY1120
+		return(0);
+	}
+	else
+		printf("QueueName is LPRServer\n");
+
+	int prnstatus=1;
+	char buffertosend[LARGEBUFFER];
+	int fdPRNPARorUSB=0;/*JYWENG20031104*/
+	if((check_par_usb_prn())== 1)
+		fdPRNPARorUSB=open("/dev/usb/lp0",O_RDWR);
+	else
+		fdPRNPARorUSB=open("/dev/lp0",O_RDWR);
+
+	if(fdPRNPARorUSB == 0)
+	{
+		printf("file descriptor not created\n");
+		send_ack_packet(sock, ACK_FAIL);//JY1120
+		return(0);	
+	}
+//	ioctl(fdPRNPARorUSB, 0x060b, &prnstatus);
+//	if(prnstatus == 0)
+//JY1120
+	if((READSTATUSFILE=fopen("/var/state/printstatus.txt", "r")) == NULL)
+	{
+		printf("open /var/state/printstatus.txt failed!\n");
+		send_ack_packet(sock, ACK_FAIL);//JY1120
+		return(0);		
+	}
+	while( fgets(readbuffer, SMALLBUFFER, READSTATUSFILE) != NULL)
+	{
+		if((str_index = strstr(readbuffer, "PRINTER_STATUS=\"")))
+		{
+			str_index += 16;//moving to status
+			strncpy(printerstatus, str_index, strlen(str_index) - 2 );	
+		}
+	}
+//JY1120	
+
+	SNPRINTF(buffertosend, sizeof(buffertosend))"Status: %s\n", printerstatus);
+//	else
+//		SNPRINTF(buffertosend, sizeof(buffertosend))"Status: Off line\n");
+//	if( Write_fd_str( *sock, buffertosend ) < 0 ) cleanup(0);
+	if( write( *sock, buffertosend, strlen(buffertosend) ) < 0 ) cleanup(0);
+	exit(0);//JY1120
+	
+#endif
+
+
+#ifdef REMOVE
 	Init_line_list(&l);
 	Init_line_list(&listv);
 	Init_line_list(&done_list);
@@ -200,7 +277,9 @@ int Job_status( int *sock, char *input )
 		Free_line_list(&listv);
 		Split(&listv,s+1,Arg_sep,1,Value_sep,1,1,0,0);
 		Remove_line_list( &l, 0 );
+#ifdef ORIGINAL_DEBUG//JY@1020
 		DEBUGFC(DLPQ1)Dump_line_list( "Job_status: args", &listv );
+#endif
 		if( (n = Find_flag_value(&listv,"lines",Value_sep)) ) status_lines = n;
 		DEBUGF(DLPQ1)("Job_status: status_lines '%d'", status_lines );
 		Free_line_list(&listv);
@@ -242,9 +321,11 @@ int Job_status( int *sock, char *input )
 	Free_line_list( &done_list );
 	if( Write_fd_str( *sock, error ) < 0 ) cleanup(0);
 	DEBUGF(DLPQ3)("Job_status: done" );
+#endif
 	return(0);
 }
 
+#ifdef REMOVE
 /***************************************************************************
  * void Get_queue_status
  * sock - used to send information
@@ -281,8 +362,10 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 
 	cache_index = -1;
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUG1("Get_queue_status: sock fd %d, checking '%s'", *sock, Printer_DYN );
 	if(DEBUGL1)Dump_line_list( "Get_queue_status: done_list", done_list );
+#endif
 
 	/* set printer name and printcap variables */
 
@@ -379,8 +462,10 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 		DEBUGF(DLPQ1)("Get_queue_status: lock succeeded");
 		Free_line_list(&cache);
 		Get_fd_image_and_split(lockfd, 0,0,&cache,Line_ends,0,0,0,0,0,0);
+#ifdef ORIGINAL_DEBUG//JY@1020
 		DEBUGFC(DLPQ3)Dump_line_list("Get_queue_status- cache", &cache );
 		DEBUGF(DLPQ3)("Get_queue_status: cache hash_key '%s'", hash_key );
+#endif
 		file = 0;
 		nx = -1;
 		if( cache.count < Lpq_status_cached_DYN ){
@@ -409,7 +494,9 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 			Split(&cache_info,file,Arg_sep,1,Value_sep,1,1,0,0);
 			file = Find_str_value(&cache_info,FILENAMES,Value_sep);
 		}
+#ifdef ORIGINAL_DEBUG//JY@1020
 		DEBUGFC(DLPQ3)Dump_line_list("Get_queue_status: cache_info", &cache_info );
+#endif
 		if( file && (fd = Checkread( file, &statb )) > 0 ){
 			modified = statb.st_mtime;
 			delta = now - modified;
@@ -516,8 +603,10 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 		Scan_queue( &Spool_control, &Sort_order, &printable,&held,&move,0,0,0,0,0 );
 	}
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUGF(DLPQ3)("Get_queue_status: total files %d", Sort_order.count );
 	DEBUGFC(DLPQ3)Dump_line_list("Get_queue_status- Sort_order", &Sort_order );
+#endif
 
 
 	/* set up the short format for folks */
@@ -543,7 +632,9 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 		Job_printable(&job,&Spool_control, &printable,&held,&move,&jerror,&jdone);
 		DEBUGF(DLPQ3)("Get_queue_status: printable %d, held %d, move %d, error %d, done %d",
 			printable, held, move, jerror, jdone );
+#ifdef ORIGINAL_DEBUG//JY@1020
 		DEBUGFC(DLPQ4)Dump_job("Get_queue_status - info", &job );
+#endif
 		if( job.info.count == 0 ) continue;
 
 		if( tokens->count && Patselect( tokens, &job.info, 0) ){
@@ -702,8 +793,10 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 			if( nodest == 0 && destinations ){
 				for( dcount = 0; dcount < destinations; ++dcount ){
 					if( Get_destination( &job, dcount ) ) continue;
+#ifdef ORIGINAL_DEBUG//JY@1020
 					DEBUGFC(DLPQ3)Dump_line_list("Get_queue_status: destination",
 						&job.destination);
+#endif
 					d_error =
 						Find_str_value(&job.destination,ERROR,Value_sep);
 					d_dest =
@@ -791,11 +884,13 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 	}
 	len = safestrlen( header );
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUGFC(DLPQ4)Dump_line_list("Get_queue_status: job status",&outbuf);
 
 	DEBUGF(DLPQ3)(
 		"Get_queue_status: RemoteHost_DYN '%s', RemotePrinter_DYN '%s', Lp '%s'",
 		RemoteHost_DYN, RemotePrinter_DYN, Lp_device_DYN );
+#endif
 
 	if( displayformat != REQ_DSHORT ){
 		s = 0;
@@ -1070,10 +1165,12 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 			}
 		}
 		close(tempfd); tempfd = -1;
+#ifdef ORIGINAL_DEBUG//JY@1020
 		DEBUGFC(DLPQ3)Dump_line_list("Get_queue_status- cache", &cache );
 		/* now we update the cached information */
 		DEBUGF(DLPQ3)("Get_queue_status: hash_key '%s', cache_index %d",
 			hash_key, cache_index );
+#endif
 		modified = 0;
 		nx = -1;
 		for( ix = 0; cache_index < 0 && ix < cache.count; ++ix ){
@@ -1129,7 +1226,9 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 		cache.list[cache_index] = safestrdup3(hash_key,"=",s,__FILE__,__LINE__);
 		if( s ) free(s); s = 0;
 
+#ifdef ORIGINAL_DEBUG//JY@1020
 		DEBUGFC(DLPQ3)Dump_line_list("Get_queue_status- new cache", &cache );
+#endif
 		if( rename( tempfile, buffer ) ){
 			err = errno;
 			unlink( Lpq_status_file_DYN );
@@ -1222,8 +1321,10 @@ void Get_queue_status( struct line_list *tokens, int *sock,
 				RemotePrinter_DYN, RemoteHost_DYN);
 			if( Remote_support_DYN ) uppercase( Remote_support_DYN );
 			if( safestrchr( Remote_support_DYN, 'Q' ) ){
+#ifdef ORIGINAL_DEBUG//JY@1020
 				fd = Send_request( 'Q', displayformat, tokens->list, Connect_timeout_DYN,
 					Send_query_rw_timeout_DYN, *sock );
+#endif
 				if( fd >= 0 ){
 					char *tempfile;
 					/* shutdown( fd, 1 ); */
@@ -1321,9 +1422,13 @@ void Print_different_last_status_lines( int *sock, int fd,
 	char *s, *t;
 
 	Init_line_list(&l);
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUGF(DLPQ1)("Print_different_last_status_lines: status lines %d", status_lines );
+#endif
 	Get_fd_image_and_split(fd,max_size,0,&l,Line_ends,0,0,0,0,0,0);
+#ifdef ORIGINAL_DEBUG//JY@1020
 	DEBUGFC(DLPQ1)Dump_line_list( "Print_different_last_status_lines", &l );
+#endif
 
 	header[0] = 0;
 	last_printed = start = -1;
@@ -1394,8 +1499,10 @@ void Get_local_or_remote_status( struct line_list *tokens, int *sock,
 	if( safestrchr( Remote_support_DYN, 'Q' ) ){
 		DEBUGF(DLPQ1)("Get_local_or_remote_status: doing remote %s@%s",
 			RemotePrinter_DYN, RemoteHost_DYN);
+#ifdef ORIGINAL_DEBUG//JY@1020
 		fd = Send_request( 'Q', displayformat, tokens->list, Connect_timeout_DYN,
 			Send_query_rw_timeout_DYN, *sock );
+#endif
 		if( fd >= 0 ){
 			/* shutdown( fd, 1 ); */
 			tempfd = Make_temp_fd( 0 );
@@ -1408,3 +1515,4 @@ void Get_local_or_remote_status( struct line_list *tokens, int *sock,
 		}
 	}
 }
+#endif
