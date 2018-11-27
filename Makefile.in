@@ -20,6 +20,7 @@ VERSION=@VERSION@
 SRC=@srcdir@
 @SET_MAKE@
 INSTALL=@INSTALL@
+STRIP=@STRIP@
 
 # prefix
 prefix=@prefix@
@@ -42,7 +43,6 @@ LPD_PERMS_PATH=\"@LPD_PERMS_PATH@\"
 LPD_CONF_PATH=\"@LPD_CONF_PATH@\"
 PRINTCAP_PATH=\"@PRINTCAP_PATH@\"
 LPD_PATH=\"@LPD_DIR@/lpd\"
-SHELL="@SHELL@"
 LOCKFILE=\"@LOCKFILE@\"
 PSHOWALL="@PSHOWALL@"
 FILTER_DIR=@FILTER_DIR@
@@ -61,6 +61,7 @@ DIRS= UTILS src po man
 INSTALLDIRS= UTILS src po man
 FILES=./postinstall ./preremove ./postremove ./lpd.conf
 ALLDIRS= ${DIRS} ${SRC}/TESTSUPPORT ${SRC}/DOCS
+ROMFSDIR = $(DESTDIR)/romfs
 
 ###############################################################################
 
@@ -73,7 +74,7 @@ $(SCRIPTS): header
 	chmod 755 $@;
 
 header: Makefile
-	@echo "#!@SHELL@" >$@
+	@echo "#!/bin/sh" >$@
 	@echo PREFIX=$(prefix) >>$@
 	@echo LPD_PATH=$(LPD_PATH) >>$@
 	@echo INSTALL=\"$(INSTALL)\" >>$@
@@ -128,13 +129,17 @@ clean::
 	-rm -f header lpd.conf $(FILES) $(SCRIPTS) postinstall preremove postremove a.out
 	-rm -f *.bak ? ?.* core *.old *~ po/*~
 
-install: all
-	$(MAKE) MAKETARGET=$@ DESTDIR=$(DESTDIR) $(INSTALLDIRS)
+#install: all
+#	$(MAKE) MAKETARGET=$@ DESTDIR=$(DESTDIR) $(INSTALLDIRS)
+#
+#	if [ "${POSTINSTALL}" != "NO" -a "${POSTINSTALL}" != "no" ] ; then \
+#		MAKEINSTALL=YES DESTDIR=$(DESTDIR) $(SHELL) postinstall ; \
+#	fi;
+#	@echo "";
 
-	if [ "${POSTINSTALL}" != "NO" -a "${POSTINSTALL}" != "no" ] ; then \
-		MAKEINSTALL=YES DESTDIR=$(DESTDIR) $(SHELL) postinstall ; \
-	fi;
-	@echo "";
+install: all
+	$(INSTALL) -D src/.libs/lpd $(DESTDIR)/usr/sbin/lpd
+	$(STRIP) $(DESTDIR)/usr/sbin/lpd
 
 info dvi check:
 

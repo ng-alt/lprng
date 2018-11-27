@@ -180,6 +180,10 @@ LINK =  $(LIBTOOL) --mode=link $(LDCC) $(LDFLAGS) -o $@
 
 TARGET= \
 	lprng_certs lprng_index_certs \
+	lpd\
+	./lpd.conf
+#TARGET= \
+	lprng_certs lprng_index_certs \
 	lpc lpd lpq lpr lprm lpf checkpc lp lpstat \
 	lpbanner monitor ./lpd.conf
 
@@ -197,6 +201,17 @@ MONITOR_OBJS= monitor.o getopt.o
 LPBANNER_OBJS= lpbanner.o plp_snprintf.o
 
 LIBLPR_OBJS = \
+	child.lo controlword.lo  \
+	debug.lo errormsg.lo fileopen.lo gethostinfo.lo \
+	getopt.lo getprinter.lo getqueue.lo globmatch.lo \
+	initialize.lo  \
+	linelist.lo linksupport.lo lockfile.lo \
+	lpd_control.lo lpd_dispatch.lo lpd_jobs.lo lpd_rcvjob.lo \
+	lpd_remove.lo  lpd_status.lo \
+	 permission.lo plp_snprintf.lo printjob.lo\
+	proctitle.lo      \
+	 utilities.lo vars.lo  $(USER_OBJS)
+#LIBLPR_OBJS = \
 	accounting.lo child.lo controlword.lo copyright.lo \
 	debug.lo errormsg.lo fileopen.lo gethostinfo.lo \
 	getopt.lo getprinter.lo getqueue.lo globmatch.lo \
@@ -209,6 +224,8 @@ LIBLPR_OBJS = \
 	stty.lo user_auth.lo utilities.lo vars.lo md5.lo $(USER_OBJS)
 
 ALL_OBJS = $(LIBLPR_OBJS) \
+	$(LPD_OBJS) \
+#ALL_OBJS = $(LIBLPR_OBJS) \
 	$(LPR_OBJS) $(LPQ_OBJS) $(LPC_OBJS) $(LPRM_OBJS) $(LPD_OBJS) \
 	$(CHECKPC_OBJS) $(LPF_OBJS) $(LPRACCNT_OBJS) $(MONITOR_OBJS) $(LPBANNER_OBJS)
 
@@ -268,24 +285,24 @@ liblpr.la: $(LIBLPR_OBJS)
 
 lpd: $(LPD_OBJS) liblpr.la
 	$(LINK) ${LPD_OBJS} liblpr.la $(LIBS)
-lpr: $(LPR_OBJS) liblpr.la
-	$(LINK) ${LPR_OBJS} liblpr.la $(LIBS)
-lpq: $(LPQ_OBJS) liblpr.la
-	$(LINK) ${LPQ_OBJS} liblpr.la $(LIBS)
-lpstat: $(LPSTAT_OBJS) liblpr.la
-	$(LINK) ${LPSTAT_OBJS} liblpr.la $(LIBS)
-lprm: $(LPRM_OBJS) liblpr.la
-	$(LINK) ${LPRM_OBJS} liblpr.la $(LIBS)
-lpc: $(LPC_OBJS) liblpr.la
-	$(LINK) ${LPC_OBJS} liblpr.la $(LIBS)
-checkpc: $(CHECKPC_OBJS) liblpr.la
-	$(LINK) ${CHECKPC_OBJS} liblpr.la $(LIBS)
-lpf: $(LPF_OBJS) liblpr.la
-	$(LINK) ${LPF_OBJS} $(LIBS)
-lpbanner: $(LPBANNER_OBJS) liblpr.la
-	$(LINK) ${LPBANNER_OBJS} $(LIBS)
-monitor: $(MONITOR_OBJS) liblpr.la
-	$(LINK) ${MONITOR_OBJS} liblpr.la $(LIBS)
+#lpr: $(LPR_OBJS) liblpr.la
+#	$(LINK) ${LPR_OBJS} liblpr.la $(LIBS)
+#lpq: $(LPQ_OBJS) liblpr.la
+#	$(LINK) ${LPQ_OBJS} liblpr.la $(LIBS)
+#lpstat: $(LPSTAT_OBJS) liblpr.la
+#	$(LINK) ${LPSTAT_OBJS} liblpr.la $(LIBS)
+#lprm: $(LPRM_OBJS) liblpr.la
+#	$(LINK) ${LPRM_OBJS} liblpr.la $(LIBS)
+#lpc: $(LPC_OBJS) liblpr.la
+#	$(LINK) ${LPC_OBJS} liblpr.la $(LIBS)
+#checkpc: $(CHECKPC_OBJS) liblpr.la
+#	$(LINK) ${CHECKPC_OBJS} liblpr.la $(LIBS)
+#lpf: $(LPF_OBJS) liblpr.la
+#	$(LINK) ${LPF_OBJS} $(LIBS)
+#lpbanner: $(LPBANNER_OBJS) liblpr.la
+#	$(LINK) ${LPBANNER_OBJS} $(LIBS)
+#monitor: $(MONITOR_OBJS) liblpr.la
+#	$(LINK) ${MONITOR_OBJS} liblpr.la $(LIBS)
 
 authenticate_pgp: ${SRC}/AUTHENTICATE/authenticate_pgp.sh
 	rm -f $@; cp ${SRC}/AUTHENTICATE/authenticate_pgp.sh $@; chmod 555 $@
@@ -347,11 +364,11 @@ install: all
 	done;
 
 	${LIBTOOL} --mode=install $(INSTALLCMD) liblpr.la $(DESTDIR)$(libdir)/liblpr.la
-	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(@PERMS@) lpq ${DESTDIR}${bindir}
-	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(@PERMS@) lprm ${DESTDIR}${bindir}
-	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(@PERMS@) lpr ${DESTDIR}${bindir}
-	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(@PERMS@) lpstat ${DESTDIR}${bindir}
-	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(@PERMS@) lpc ${DESTDIR}${sbindir}
+	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(NORM_PERMS) lpq ${DESTDIR}${bindir}
+	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(NORM_PERMS) lprm ${DESTDIR}${bindir}
+	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(NORM_PERMS) lpr ${DESTDIR}${bindir}
+	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(NORM_PERMS) lpstat ${DESTDIR}${bindir}
+	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(NORM_PERMS) lpc ${DESTDIR}${sbindir}
 	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(NORM_PERMS) lpd ${DESTDIR}${LPD_DIR}
 	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(NORM_PERMS) lpf ${DESTDIR}${FILTER_DIR}
 	${LIBTOOL} --mode=install ${INSTALLCMD} ${STRIP} -m $(NORM_PERMS) lpbanner ${DESTDIR}${FILTER_DIR}

@@ -1563,7 +1563,6 @@ void Read_file_and_split( struct line_list *list, char *file,
 		trim, nocomment );
 }
 
-#ifdef REMOVE
 /*
  * Printcap information
  */
@@ -1762,6 +1761,7 @@ void Build_printcap_info(
 	return;
 }
 
+#ifdef REMOVE
 /*
  * char *Select_pc_info(
  *   - returns the main name of the print queue
